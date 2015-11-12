@@ -13,7 +13,7 @@ var secret = make([]byte, 0)
 func secretHandler(token *jwt.Token) (interface{}, error) {
 	if len(secret) == 0 {
 		serviceInstance := serviceclient.GetInstance("authentication-service")
-		resp, err := serviceInstance.Get("/oauth/public_key")
+		resp, err := serviceInstance.Get("/oauth/token_key")
 		if err != nil {
 			return nil, err
 		}
@@ -27,7 +27,7 @@ func secretHandler(token *jwt.Token) (interface{}, error) {
 	return secret, nil
 }
 
-func JwtMiddleware(next http.Handler) http.Handler {
+func New(next http.Handler) http.Handler {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: secretHandler,
 	})
