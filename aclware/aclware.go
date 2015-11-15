@@ -3,11 +3,12 @@ package authware
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/InteractiveLecture/serviceclient"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 type PermissionFetcher func(id string, sid string, objectClass string) (map[string]interface{}, error)

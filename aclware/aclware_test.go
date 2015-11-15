@@ -3,14 +3,13 @@ package authware
 import (
 	"encoding/json"
 	"errors"
-	"github.com/InteractiveLecture/serviceclient"
-	"github.com/InteractiveLecture/serviceclient/mocks"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/InteractiveLecture/serviceclient/test"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func mockOptions(expectedPermissions []string, realPermissions []string) Options {
@@ -65,9 +64,7 @@ func TestFailGettingPermissions(t *testing.T) {
 
 func TestDefaultFetcher(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mock := mocks.NewMockBackendAdapter(mockCtrl)
-	defer mockCtrl.Finish()
-	authServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	authServer := test.Service(mockCtrl, "acl-service", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		permissions := map[string]interface{}{
 			"read":   true,
 			"write":  true,
@@ -76,12 +73,8 @@ func TestDefaultFetcher(t *testing.T) {
 		encoder := json.NewEncoder(w)
 		encoder.Encode(permissions)
 	}))
+	defer mockCtrl.Finish()
 	defer authServer.Close()
-	mock.EXPECT().Configure("acl-service").Return(nil)
-	url := strings.Split(authServer.URL, "http://")[1]
-	mock.EXPECT().Resolve("acl-service").Return(url, nil)
-	//mock.EXPECT().Refresh()
-	serviceclient.Configure(mock, "acl-service")
 	emptyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	options := DefaultOptions(emptyHandler, "media", "read")
 	permissions, err := options.Fetcher("1", "admin", "media")
@@ -89,9 +82,6 @@ func TestDefaultFetcher(t *testing.T) {
 	assert.True(t, permissions["read"].(bool))
 	assert.True(t, permissions["write"].(bool))
 	assert.False(t, permissions["delete"].(bool))
-
-	//authServer := httptest.NewServer()
-
 }
 
 func pa(permissions ...string) []string {
