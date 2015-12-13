@@ -19,7 +19,7 @@ func mockOptions(expectedPermissions []string, realPermissions []string) Options
 	result.Extractor = func(r *http.Request) (id string, sid string) {
 		return "1", "admin"
 	}
-	result.Fetcher = func(id string, sid string, objectClass string) (map[string]interface{}, error) {
+	result.Fetcher = func(id string, sid string) (map[string]interface{}, error) {
 		var permissions = make(map[string]interface{})
 		if realPermissions == nil {
 			return nil, errors.New("mock error")
@@ -64,11 +64,12 @@ func TestFailGettingPermissions(t *testing.T) {
 
 func TestDefaultFetcher(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	authServer := test.Service(mockCtrl, "acl-service", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	authServer := servicetest.Service(mockCtrl, "acl-service", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		permissions := map[string]interface{}{
 			"read":   true,
-			"write":  true,
+			"create": true,
 			"delete": false,
+			"update": false,
 		}
 		encoder := json.NewEncoder(w)
 		encoder.Encode(permissions)
@@ -77,10 +78,10 @@ func TestDefaultFetcher(t *testing.T) {
 	defer authServer.Close()
 	emptyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	options := DefaultOptions(emptyHandler, "media", "read")
-	permissions, err := options.Fetcher("1", "admin", "media")
+	permissions, err := options.Fetcher("1", "admin")
 	assert.Nil(t, err)
 	assert.True(t, permissions["read"].(bool))
-	assert.True(t, permissions["write"].(bool))
+	assert.True(t, permissions["create"].(bool))
 	assert.False(t, permissions["delete"].(bool))
 }
 
