@@ -64,7 +64,7 @@ func TestFailGettingPermissions(t *testing.T) {
 
 func TestDefaultFetcher(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	authServer := servicetest.Service(mockCtrl, "acl-service", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	authServer, _ := servicetest.Service("acl-service", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		permissions := map[string]interface{}{
 			"read":   true,
 			"create": true,

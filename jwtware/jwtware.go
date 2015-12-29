@@ -13,7 +13,7 @@ var secret = make([]byte, 0)
 
 func SecretHandler(token *jwt.Token) (interface{}, error) {
 	if len(secret) == 0 {
-		serviceInstance := serviceclient.GetInstance("authentication-service")
+		serviceInstance := serviceclient.New("authentication-service")
 		resp, err := serviceInstance.Get("/oauth/token_key")
 		if err != nil {
 			return nil, err

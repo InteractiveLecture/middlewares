@@ -23,7 +23,7 @@ type Options struct {
 }
 
 func defaultFetcher(id string, sid string) (result map[string]interface{}, err error) {
-	instance := serviceclient.GetInstance("acl-service")
+	instance := serviceclient.New("acl-service")
 	var resp *http.Response
 	resp, err = instance.Get(fmt.Sprintf("/objects/%s/permissions/%s", id, sid))
 	if err != nil {
