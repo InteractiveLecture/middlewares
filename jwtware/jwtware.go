@@ -1,7 +1,8 @@
 package jwtware
 
 import (
-	"io/ioutil"
+	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/InteractiveLecture/serviceclient"
@@ -9,21 +10,24 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-var secret = make([]byte, 0)
+var secret []byte
 
 func SecretHandler(token *jwt.Token) (interface{}, error) {
-	if len(secret) == 0 {
+	if secret == nil {
 		serviceInstance := serviceclient.New("authentication-service")
 		resp, err := serviceInstance.Get("/oauth/token_key")
 		if err != nil {
+			log.Println("error occured while requesting key: ", err)
 			return nil, err
 		}
 		defer resp.Body.Close()
-		body, decodeErr := ioutil.ReadAll(resp.Body)
-		if decodeErr != nil {
+		result := make(map[string]interface{})
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		if err != nil {
+			log.Println("error occured while reading key: ", err)
 			return nil, err
 		}
-		secret = body
+		secret = []byte(result["value"].(string))
 	}
 	return secret, nil
 }
